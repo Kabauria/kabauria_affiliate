@@ -482,7 +482,7 @@ async function sync(){if(!session.admin)return;
   snap[t]=Object.fromEntries([...cur].map(([id,o])=>[id,JSON.stringify(o)]))}
  const s=splitSettings(db.settings),js=JSON.stringify(s);
  if(js!==snap.settings){const {error}=await sb.from('settings').upsert([{key:'payments',data:s.payments},{key:'program',data:s.program}]);if(error)throw error;snap.settings=js}}
-async function boot(){try{await initSession();await loadAll();renderAll();await processReferralQuery()}catch(e){console.error(e);document.querySelector('main').insertAdjacentHTML('afterbegin','<div class="notice">Gagal memuat data dari Supabase: '+esc(e.message||e)+'. Periksa config.js dan jalankan schema.sql.</div>')}}
+async function boot(){if(new URLSearchParams(location.search).get('ref'))$('mainTabs').classList.add('hidden');try{await initSession();await loadAll();renderAll();await processReferralQuery()}catch(e){console.error(e);document.querySelector('main').insertAdjacentHTML('afterbegin','<div class="notice">Gagal memuat data dari Supabase: '+esc(e.message||e)+'. Periksa config.js dan jalankan schema.sql.</div>')}}
 function save(render=true){if(render)renderAll();chain=chain.then(sync).catch(e=>{console.error(e);alert('Gagal menyimpan ke server: '+(e.message||e)+'\nMuat ulang halaman agar data sinkron.')})}
 function audit(action,detail){db.audit.unshift({id:uid('log'),date:new Date().toISOString(),action,detail});db.audit=db.audit.slice(0,300)}
 function activeStatus(a){if(a.deletedAt||a.status==='deleted')return 'deleted';if(a.status==='disabled')return 'disabled';if(a.status==='pending')return 'pending';if(a.endDate&&a.endDate<today())return 'expired';return 'active'}
