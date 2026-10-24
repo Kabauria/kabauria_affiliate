@@ -8,9 +8,15 @@ const money=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',ma
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 /* ---------- Supabase ---------- */
-const cfgOk=typeof SUPABASE_URL==='string'&&/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(SUPABASE_URL)&&!/ISI_/.test(SUPABASE_URL)&&typeof SUPABASE_ANON_KEY==='string'&&SUPABASE_ANON_KEY.length>20&&!/ISI_/.test(SUPABASE_ANON_KEY);
+let cfgWhy='';
+if(typeof SUPABASE_URL==='undefined'||typeof SUPABASE_ANON_KEY==='undefined')cfgWhy='File config.js tidak terbaca atau tidak ada di GitHub.';
+else if(/ISI_/.test(SUPABASE_URL)||/ISI_/.test(SUPABASE_ANON_KEY))cfgWhy='config.js masih berisi tulisan contoh (ISI_...). Ganti dengan URL dan anon key dari Supabase, lalu upload ulang ke GitHub.';
+else if(!/^https:\/\/[a-z0-9-]+\.supabase\.(co|in)\/?$/i.test(String(SUPABASE_URL).trim()))cfgWhy='SUPABASE_URL salah format. Harus seperti https://abcdefgh.supabase.co (tanpa /rest/v1/ atau tambahan lain). Isi sekarang: '+String(SUPABASE_URL).slice(0,60);
+else if(String(SUPABASE_ANON_KEY).trim().length<20)cfgWhy='SUPABASE_ANON_KEY terlalu pendek / belum lengkap.';
+else if(!window.supabase)cfgWhy='Library Supabase gagal dimuat (cek koneksi internet atau pemblokir iklan).';
+const cfgOk=!cfgWhy;
 let sb=null;
-if(cfgOk&&window.supabase){sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY)}
+if(cfgOk){try{sb=window.supabase.createClient(String(SUPABASE_URL).trim(),String(SUPABASE_ANON_KEY).trim())}catch(e){cfgWhy='Gagal membuat sambungan: '+e.message}}
 
 /* ---------- State (cache dari Supabase) ---------- */
 let db={settings:{commissionMode:'fixed',commissionValue:10000,payments:{qris:{enabled:false,image:''},transfer:{enabled:false,bank:'',number:'',holder:''},cash:{enabled:true,note:''}}},products:[],affiliates:[],orders:[],commissions:[],payouts:[],audit:[]};
@@ -122,7 +128,7 @@ function showPayInfo(o){const P=db.settings.payments;let h=`<div class="commissi
 /* ---------- Login ---------- */
 function resetSession(){session.admin=false;session.aff=''}
 function loginForm(k){const ad=k==='admin';return `<div class="commission-box" style="max-width:380px;margin:auto"><h3>${ad?'Login Admin':'Login Affiliate'}</h3><div class="field"><label>Email</label><input id="lgUser" type="text" inputmode="email" autocapitalize="none" autocomplete="username"></div><div class="field" style="margin-top:10px"><label>Password</label><input id="lgPass" type="password" autocomplete="current-password"></div><button id="lgBtn" style="width:100%;margin-top:12px">Masuk</button>${ad?'':'<button id="lgReg" class="secondary" style="width:100%;margin-top:8px">Pertama kali? Buat password</button>'}<div id="lgSt" class="status" style="color:var(--red)"></div><div class="muted">${ad?'Akun admin dibuat di Supabase (lihat README).':'Pakai email yang didaftarkan admin. Pertama kali: isi email + password baru (min. 6 karakter), lalu tekan "Buat password" dan konfirmasi lewat email.'}</div></div>`}
-function bindLogin(k){if(!sb){$('lgSt').textContent='Belum tersambung ke Supabase (cek config.js).';return}const st=$('lgSt');const val=()=>({email:$('lgUser').value.trim(),password:$('lgPass').value});
+function bindLogin(k){if(!sb){$('lgSt').textContent='Belum tersambung ke Supabase. '+cfgWhy;return}const st=$('lgSt');const val=()=>({email:$('lgUser').value.trim(),password:$('lgPass').value});
  const done=async()=>{await refreshRole();
   if(k==='admin'&&!session.admin){await sb.auth.signOut();resetSession();st.style.color='var(--red)';st.textContent='Akun ini bukan admin.';return}
   if(k==='aff'&&!session.aff){const was=session.admin;await sb.auth.signOut();resetSession();st.style.color='var(--red)';st.textContent=was?'Akun admin: gunakan tab Dashboard admin.':'Email belum terdaftar sebagai affiliate. Hubungi admin.';return}
@@ -300,7 +306,7 @@ async function processReferralQuery(){const q=new URLSearchParams(location.searc
  if(data){SS.setItem('kabauria_referral_session',ref.trim().toUpperCase());SS.removeItem('kabauria_sales_admin');note('Referral aktif: <b>'+esc(ref.trim().toUpperCase())+'</b>. Berlaku pada sesi browser ini.')}}
 async function init(){
  renderCatalog();
- if(!sb){$('setupNotice').innerHTML='<div class="notice"><b>Belum tersambung ke Supabase.</b> Isi <code>SUPABASE_URL</code> dan <code>SUPABASE_ANON_KEY</code> di file <code>config.js</code> (lihat README), lalu muat ulang halaman.</div>';renderAdmin();return}
+ if(!sb){$('setupNotice').innerHTML='<div class="notice"><b>Belum tersambung ke Supabase.</b> '+esc(cfgWhy)+'</div>';renderAdmin();return}
  try{await refreshRole()}catch(e){console.error(e)}
  await refresh();
  try{await processReferralQuery()}catch(e){console.error(e)}
