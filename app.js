@@ -8,15 +8,19 @@ const money=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',ma
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 /* ---------- Supabase ---------- */
+/* Membaca konfigurasi: format `const SUPABASE_URL=...` ATAU `window.KABAURIA_CONFIG={SUPABASE_URL,SUPABASE_ANON_KEY}` */
+const _cfg=window.KABAURIA_CONFIG||{};
+const CFG_URL=String(typeof SUPABASE_URL!=='undefined'?SUPABASE_URL:(_cfg.SUPABASE_URL||_cfg.url||'')).trim();
+const CFG_KEY=String(typeof SUPABASE_ANON_KEY!=='undefined'?SUPABASE_ANON_KEY:(_cfg.SUPABASE_ANON_KEY||_cfg.anonKey||'')).trim();
 let cfgWhy='';
-if(typeof SUPABASE_URL==='undefined'||typeof SUPABASE_ANON_KEY==='undefined')cfgWhy='File config.js tidak terbaca atau tidak ada di GitHub.';
-else if(/ISI_/.test(SUPABASE_URL)||/ISI_/.test(SUPABASE_ANON_KEY))cfgWhy='config.js masih berisi tulisan contoh (ISI_...). Ganti dengan URL dan anon key dari Supabase, lalu upload ulang ke GitHub.';
-else if(!/^https:\/\/[a-z0-9-]+\.supabase\.(co|in)\/?$/i.test(String(SUPABASE_URL).trim()))cfgWhy='SUPABASE_URL salah format. Harus seperti https://abcdefgh.supabase.co (tanpa /rest/v1/ atau tambahan lain). Isi sekarang: '+String(SUPABASE_URL).slice(0,60);
-else if(String(SUPABASE_ANON_KEY).trim().length<20)cfgWhy='SUPABASE_ANON_KEY terlalu pendek / belum lengkap.';
+if(!CFG_URL&&!CFG_KEY)cfgWhy='File config.js tidak terbaca atau tidak ada di GitHub.';
+else if(/ISI_/.test(CFG_URL)||/ISI_/.test(CFG_KEY))cfgWhy='config.js masih berisi tulisan contoh (ISI_...). Ganti dengan URL dan anon key dari Supabase, lalu upload ulang ke GitHub.';
+else if(!/^https:\/\/[a-z0-9-]+\.supabase\.(co|in)\/?$/i.test(CFG_URL))cfgWhy='SUPABASE_URL salah format. Harus seperti https://abcdefgh.supabase.co (tanpa /rest/v1/ atau tambahan lain). Isi sekarang: '+CFG_URL.slice(0,60);
+else if(CFG_KEY.length<20)cfgWhy='SUPABASE_ANON_KEY terlalu pendek / belum lengkap.';
 else if(!window.supabase)cfgWhy='Library Supabase gagal dimuat (cek koneksi internet atau pemblokir iklan).';
 const cfgOk=!cfgWhy;
 let sb=null;
-if(cfgOk){try{sb=window.supabase.createClient(String(SUPABASE_URL).trim(),String(SUPABASE_ANON_KEY).trim())}catch(e){cfgWhy='Gagal membuat sambungan: '+e.message}}
+if(cfgOk){try{sb=window.supabase.createClient(CFG_URL,CFG_KEY)}catch(e){cfgWhy='Gagal membuat sambungan: '+e.message}}
 
 /* ---------- State (cache dari Supabase) ---------- */
 let db={settings:{commissionMode:'fixed',commissionValue:10000,payments:{qris:{enabled:false,image:''},transfer:{enabled:false,bank:'',number:'',holder:''},cash:{enabled:true,note:''}}},products:[],affiliates:[],orders:[],commissions:[],payouts:[],audit:[]};
