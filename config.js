@@ -1,4 +1,4 @@
 window.KABAURIA_CONFIG = {
-  SUPABASE_URL: 'https://zzkryrkbwidiuqbuliqe.supabase.co',
+  SUPABASE_URL: 'https://zzkryrkbwidiuqbuliqe.supabase.co/rest/v1/',
   SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp6a3J5cmtid2lkaXVxYnVsaXFlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MTYxODEsImV4cCI6MjEwODM5MjE4MX0.hJnA0eWnYW79bRkCH9Vu-0jDldP7frcdeoOEmb7tDpc'
 };
