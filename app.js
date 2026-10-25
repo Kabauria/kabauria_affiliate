@@ -1,4 +1,9 @@
 /* KABAURIA Kaos Tambang - Affiliate Portal (tersambung Supabase) */
+const APP_VERSION='2.5';
+/* Tampilkan setiap error di layar (bukan diam-diam) agar mudah dilacak */
+function showFatal(m){try{let b=document.getElementById('fatalBanner');if(!b){b=document.createElement('div');b.id='fatalBanner';b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#7f1d1d;color:#fff;padding:10px 14px;font:13px/1.4 system-ui,sans-serif;white-space:pre-wrap;cursor:pointer';b.title='Klik untuk menutup';b.onclick=()=>b.remove();document.body.appendChild(b)}b.textContent='Terjadi kesalahan (v'+APP_VERSION+'): '+m}catch(_){}}
+window.addEventListener('error',e=>showFatal((e.message||'error')+(e.filename?' ['+e.filename.split('/').pop()+':'+e.lineno+']':'')));
+window.addEventListener('unhandledrejection',e=>showFatal(String((e.reason&&e.reason.message)||e.reason)));
 const $=id=>document.getElementById(id);
 const mkStore=n=>{try{const t=window[n];t.setItem('_t','1');t.removeItem('_t');return t}catch(e){const m={};return{getItem:k=>k in m?m[k]:null,setItem:(k,v)=>{m[k]=String(v)},removeItem:k=>{delete m[k]}}}};
 const SS=mkStore('sessionStorage');
@@ -51,12 +56,14 @@ async function loadAll(){
   db.affiliates=r[3].data.map(mapAff);db.orders=r[4].data.map(mapOrder);db.commissions=r[5].data.map(mapCom);db.payouts=r[6].data.map(mapPayout);db.audit=r[7].data.map(a=>({action:a.action,detail:a.detail,date:a.created_at}))}
  else if(session.aff){db.affiliates=r[2].data.map(mapAff);db.orders=r[3].data.map(mapAffOrder);db.commissions=r[4].data.map(mapCom)}
 }
-async function refresh(){try{await loadAll()}catch(e){alert('Gagal memuat data: '+(e.message||e))}loading=false;renderAll()}
+async function refresh(){try{await loadAll()}catch(e){alert('Gagal memuat data: '+(e.message||e))}loading=false;try{renderAll()}catch(e){showFatal('Gagal menampilkan halaman: '+(e.message||e));console.error(e)}}
 async function refreshRole(){
  session.admin=false;session.aff='';
  const {data}=await sb.auth.getSession();const user=data.session?.user;if(!user)return;
- const ad=await sb.from('admins').select('user_id').eq('user_id',user.id).maybeSingle();if(ad.data){session.admin=true;return}
- const af=await sb.from('affiliates').select('id').eq('user_id',user.id).maybeSingle();if(af.data)session.aff=af.data.id}
+ /* dua pemeriksaan dijalankan bersamaan (hemat 1x tunggu jaringan) */
+ const [ad,af]=await Promise.all([sb.from('admins').select('user_id').eq('user_id',user.id).maybeSingle(),sb.from('affiliates').select('id').eq('user_id',user.id).maybeSingle()]);
+ if(ad.data){session.admin=true;return}
+ if(af.data)session.aff=af.data.id}
 const adminLog=(a,d)=>sb.rpc('admin_log',{p_action:a,p_detail:d});
 async function call(name,args){const {data,error}=await sb.rpc(name,args);if(error){alert(error.message);return{ok:false}}await refresh();return{ok:true,data}}
 async function uploadImage(dataUrl,folder){const blob=await (await fetch(dataUrl)).blob();const path=folder+'/'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)+'.jpg';const {error}=await sb.storage.from('media').upload(path,blob,{contentType:'image/jpeg',cacheControl:'31536000'});if(error)throw error;return sb.storage.from('media').getPublicUrl(path).data.publicUrl}
@@ -133,13 +140,16 @@ function showPayInfo(o){const P=db.settings.payments;let h=`<div class="commissi
 
 /* ---------- Login ---------- */
 function resetSession(){session.admin=false;session.aff=''}
-function loginForm(k){const ad=k==='admin';return `<div class="commission-box" style="max-width:380px;margin:auto"><h3>${ad?'Login Admin':'Login Affiliate'}</h3><div class="field"><label>${ad?'Email':'Username'}</label><input id="lgUser" type="text" ${ad?'inputmode="email"':''} autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username"></div><div class="field" style="margin-top:10px"><label>Password</label><input id="lgPass" type="password" autocomplete="current-password"></div><button id="lgBtn" style="width:100%;margin-top:12px">Masuk</button><div id="lgSt" class="status" style="color:var(--red)"></div><div class="muted">${ad?'Akun admin dibuat di Supabase (lihat README).':'Username dan password dibuat oleh admin. Lupa password? Hubungi admin.'}</div></div>`}
+function loginForm(k){const ad=k==='admin';return `<div class="commission-box" style="max-width:380px;margin:auto"><h3>${ad?'Login Admin':'Login Affiliate'}</h3><div class="field"><label>${ad?'Email':'Username'}</label><input id="lgUser" type="text" ${ad?'inputmode="email"':''} autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username"></div><div class="field" style="margin-top:10px"><label>Password</label><input id="lgPass" type="password" autocomplete="current-password"></div><button id="lgBtn" style="width:100%;margin-top:12px">Masuk</button><div id="lgSt" class="status" style="color:var(--red)"></div><div class="muted" style="font-size:11px;margin:4px 0">v${APP_VERSION}</div><div class="muted">${ad?'Akun admin dibuat di Supabase (lihat README).':'Username dan password dibuat oleh admin. Lupa password? Hubungi admin.'}</div></div>`}
 function bindLogin(k){if(!sb){$('lgSt').textContent='Belum tersambung ke Supabase. '+cfgWhy;return}const st=$('lgSt');const val=()=>{const u=$('lgUser').value.trim();return{email:k==='aff'?(u.includes('@')?u:(u?userToEmail(u):'')):u,password:$('lgPass').value}};
  const done=async()=>{await refreshRole();
   if(k==='admin'&&!session.admin){await sb.auth.signOut();resetSession();st.style.color='var(--red)';st.textContent='Akun ini bukan admin.';return}
   if(k==='aff'&&!session.aff){const was=session.admin;await sb.auth.signOut();resetSession();st.style.color='var(--red)';st.textContent=was?'Akun admin: gunakan tab Dashboard admin.':'Akun ini belum aktif sebagai affiliate (mungkin masa aktif berakhir atau dinonaktifkan). Hubungi admin.';return}
   await refresh()};
- const go=async()=>{const {email,password}=val();if(!email||!password){st.textContent=k==='aff'?'Isi username dan password.':'Isi email dan password.';return}$('lgBtn').disabled=true;st.textContent='';const {error}=await sb.auth.signInWithPassword({email,password});$('lgBtn').disabled=false;if(error){st.style.color='var(--red)';st.textContent=error.message==='Invalid login credentials'?(k==='aff'?'Username atau password salah.':'Email atau password salah.'):error.message;return}await done()};
+ const go=async()=>{const {email,password}=val();st.style.color='var(--red)';if(!email||!password){st.textContent=k==='aff'?'Isi username dan password.':'Isi email dan password.';return}$('lgBtn').disabled=true;st.style.color='var(--muted,#666)';st.textContent='Memeriksa...';
+  try{const {error}=await sb.auth.signInWithPassword({email,password});if(error){st.style.color='var(--red)';st.textContent=error.message==='Invalid login credentials'?(k==='aff'?'Username atau password salah.':'Email atau password salah.'):error.message;return}st.textContent='Berhasil, memuat data...';await done()}
+  catch(err){st.style.color='var(--red)';st.textContent='Gagal: '+(err&&err.message||err);console.error(err)}
+  finally{if($('lgBtn'))$('lgBtn').disabled=false}};
  $('lgBtn').onclick=go;$('lgPass').addEventListener('keydown',e=>{if(e.key==='Enter')go()});}
 async function logout(){await sb.auth.signOut();resetSession();await refresh()}
 
@@ -224,7 +234,7 @@ function renderAffiliatesAdmin(root){root.innerHTML=`<div class="panel-head"><di
  };
  $('addAffiliate').onclick=()=>openAffiliateForm();$('affiliateSearch').addEventListener('input',draw);$('affiliateStatusFilter').addEventListener('change',draw);draw();
 }
-function openAffiliateForm(id=''){const a=id?getAffiliate(id):null;$('affiliateForm').reset();$('aId').value=a?.id||'';$('affiliateModalTitle').textContent=a?'Edit affiliate':'Tambah affiliate';$('aName').value=a?.name||'';$('aEmail').value=a?.username||'';$('aEmail').readOnly=!!a;$('aPass').value='';$('aPass').required=!a;$('aPass').placeholder=a?'Kosongkan jika tidak diganti':'min. 6 karakter';$('aCode').value=a?.code||'KBR'+Math.random().toString(36).slice(2,6).toUpperCase();$('aStatus').value=a?.status||'active';$('aStart').value=a?.startDate||today();$('aEnd').value=a?.endDate||plusMonths($('aStart').value,6);$('aCommMode').value=a?.commissionMode||'default';$('aCommValue').value=a?.commissionValue||0;syncCommInput();$('affiliateFormStatus').textContent='';$('affiliateModal').classList.add('show')}
+function openAffiliateForm(id=''){const a=id?getAffiliate(id):null;$('affiliateForm').reset();$('aId').value=a?.id||'';$('affiliateModalTitle').textContent=a?'Edit affiliate':'Tambah affiliate';$('aName').value=a?.name||'';$('aEmail').value=a?.username||'';$('aEmail').readOnly=!!a;$('aEmail').closest('.field').querySelector('label').innerHTML=a?'Username login <span class="muted">(tidak bisa diubah setelah dibuat)</span>':'Username login * <span class="muted">(huruf kecil/angka, tanpa spasi)</span>';$('aPass').value='';$('aPass').required=!a;$('aPass').placeholder=a?'Kosongkan jika tidak diganti':'min. 6 karakter';$('aCode').value=a?.code||'KBR'+Math.random().toString(36).slice(2,6).toUpperCase();$('aStatus').value=a?.status||'active';$('aStart').value=a?.startDate||today();$('aEnd').value=a?.endDate||plusMonths($('aStart').value,6);$('aCommMode').value=a?.commissionMode||'default';$('aCommValue').value=a?.commissionValue||0;syncCommInput();$('affiliateFormStatus').textContent='';$('affiliateModal').classList.add('show')}
 function syncCommInput(){const d=$('aCommMode').value==='default';$('aCommValue').disabled=d;if(d)$('aCommValue').value=0}
 $('aCommMode').addEventListener('change',syncCommInput);
 $('setSixMonths').onclick=()=>{$('aEnd').value=plusMonths($('aStart').value||today(),6)};
