@@ -1,5 +1,5 @@
 /* KABAURIA Kaos Tambang - Affiliate Portal (tersambung Supabase) */
-const APP_VERSION='2.6';
+const APP_VERSION='2.7';
 /* Tampilkan setiap error di layar (bukan diam-diam) agar mudah dilacak */
 function showFatal(m){try{let b=document.getElementById('fatalBanner');if(!b){b=document.createElement('div');b.id='fatalBanner';b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#7f1d1d;color:#fff;padding:10px 14px;font:13px/1.4 system-ui,sans-serif;white-space:pre-wrap;cursor:pointer';b.title='Klik untuk menutup';b.onclick=()=>b.remove();document.body.appendChild(b)}b.textContent='Terjadi kesalahan (v'+APP_VERSION+'): '+m}catch(_){}}
 window.addEventListener('error',e=>showFatal((e.message||'error')+(e.filename?' ['+e.filename.split('/').pop()+':'+e.lineno+']':'')));
@@ -151,17 +151,17 @@ function showPayInfo(o){const P=db.settings.payments;let h=`<div class="commissi
 
 /* ---------- Login ---------- */
 function resetSession(){session.admin=false;session.aff=''}
-function loginForm(k){const ad=k==='admin';return `<div class="commission-box" style="max-width:380px;margin:auto"><h3>${ad?'Login Admin':'Login Affiliate'}</h3><div class="field"><label>${ad?'Email':'Username'}</label><input id="lgUser" type="text" ${ad?'inputmode="email"':''} autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username"></div><div class="field" style="margin-top:10px"><label>Password</label><input id="lgPass" type="password" autocomplete="current-password"></div><button id="lgBtn" style="width:100%;margin-top:12px">Masuk</button><div id="lgSt" class="status" style="color:var(--red)"></div><div class="muted" style="font-size:11px;margin:4px 0">v${APP_VERSION}</div><div class="muted">${ad?'Akun admin dibuat di Supabase (lihat README).':'Username dan password dibuat oleh admin. Lupa password? Hubungi admin.'}</div></div>`}
-function bindLogin(k){if(!sb){$('lgSt').textContent='Belum tersambung ke Supabase. '+cfgWhy;return}const st=$('lgSt');const val=()=>{const u=$('lgUser').value.trim();return{email:k==='aff'?(u.includes('@')?u:(u?userToEmail(u):'')):u,password:$('lgPass').value}};
+function loginForm(k){const ad=k==='admin';return `<div class="commission-box" style="max-width:380px;margin:auto"><h3>${ad?'Login Admin':'Login Affiliate'}</h3><div class="field"><label>${ad?'Email':'Username'}</label><input id="lgUser_${k}" type="text" ${ad?'inputmode="email"':''} autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username"></div><div class="field" style="margin-top:10px"><label>Password</label><input id="lgPass_${k}" type="password" autocomplete="current-password"></div><button id="lgBtn_${k}" style="width:100%;margin-top:12px">Masuk</button><div id="lgSt_${k}" class="status" style="color:var(--red)"></div><div class="muted" style="font-size:11px;margin:4px 0">v${APP_VERSION}</div><div class="muted">${ad?'Akun admin dibuat di Supabase (lihat README).':'Username dan password dibuat oleh admin. Lupa password? Hubungi admin.'}</div></div>`}
+function bindLogin(k){if(!sb){$('lgSt_'+k).textContent='Belum tersambung ke Supabase. '+cfgWhy;return}const st=$('lgSt_'+k);const val=()=>{const u=$('lgUser_'+k).value.trim();return{email:k==='aff'?(u.includes('@')?u:(u?userToEmail(u):'')):u,password:$('lgPass_'+k).value}};
  const done=async()=>{await refreshRole();
   if(k==='admin'&&!session.admin){await sb.auth.signOut();resetSession();st.style.color='var(--red)';st.textContent='Akun ini bukan admin.';return}
   if(k==='aff'&&!session.aff){const was=session.admin;await sb.auth.signOut();resetSession();st.style.color='var(--red)';st.textContent=was?'Akun admin: gunakan tab Dashboard admin.':'Akun ini belum aktif sebagai affiliate (mungkin masa aktif berakhir atau dinonaktifkan). Hubungi admin.';return}
   await refresh()};
- const go=async()=>{const {email,password}=val();st.style.color='var(--red)';if(!email||!password){st.textContent=k==='aff'?'Isi username dan password.':'Isi email dan password.';return}$('lgBtn').disabled=true;st.style.color='var(--muted,#666)';st.textContent='Memeriksa...';
+ const go=async()=>{const {email,password}=val();st.style.color='var(--red)';if(!email||!password){st.textContent=k==='aff'?'Isi username dan password.':'Isi email dan password.';return}$('lgBtn_'+k).disabled=true;st.style.color='var(--muted,#666)';st.textContent='Memeriksa...';
   try{const {error}=await sb.auth.signInWithPassword({email,password});if(error){st.style.color='var(--red)';st.textContent=error.message==='Invalid login credentials'?(k==='aff'?'Username atau password salah.':'Email atau password salah.'):error.message;return}st.textContent='Berhasil, memuat data...';await done()}
   catch(err){st.style.color='var(--red)';st.textContent='Gagal: '+(err&&err.message||err);console.error(err)}
-  finally{if($('lgBtn'))$('lgBtn').disabled=false}};
- $('lgBtn').onclick=go;$('lgPass').addEventListener('keydown',e=>{if(e.key==='Enter')go()});}
+  finally{if($('lgBtn_'+k))$('lgBtn_'+k).disabled=false}};
+ $('lgBtn_'+k).onclick=go;$('lgPass_'+k).addEventListener('keydown',e=>{if(e.key==='Enter')go()});}
 async function logout(){await sb.auth.signOut();resetSession();await refresh()}
 
 /* ---------- Dashboard affiliate ---------- */
