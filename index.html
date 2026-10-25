@@ -438,7 +438,8 @@ input::placeholder,textarea::placeholder{color:#8f8466}
 <div class="overlay" id="affiliateModal"><div class="modal"><div class="modal-head"><h2 id="affiliateModalTitle">Tambah affiliate</h2><button class="close" data-close="affiliateModal">Tutup ✕</button></div>
 <form id="affiliateForm"><input type="hidden" id="aId"><div class="form-grid">
  <div class="field"><label>Nama affiliate *</label><input id="aName" required></div>
- <div class="field"><label>Email / username *</label><input id="aEmail" required></div>
+ <div class="field"><label>Username login * <span class="muted">(tidak bisa diubah)</span></label><input id="aEmail" required autocapitalize="none" autocomplete="off" placeholder="mis. budi01"></div>
+ <div class="field"><label>Password login *</label><input id="aPass" type="text" autocomplete="off" placeholder="min. 6 karakter"></div>
  <div class="field"><label>Kode referral *</label><input id="aCode" required></div>
  <div class="field"><label>Status akun</label><select id="aStatus"><option value="active">Aktif</option><option value="pending">Menunggu persetujuan</option><option value="disabled">Dinonaktifkan</option></select></div>
  <div class="field"><label>Tanggal mulai aktif</label><input id="aStart" type="date"></div>
