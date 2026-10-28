@@ -385,6 +385,7 @@ input::placeholder,textarea::placeholder{color:#8f8466}
 .ship-row{display:flex;gap:8px;align-items:flex-start}.ship-row+.ship-row{margin-top:6px}
 .ship-ico{flex:0 0 20px;height:20px;border-radius:50%;display:grid;place-items:center;background:#1f7a4a;color:#fff;font-size:12px;font-weight:800}
 .ship-ico2{background:#8a6812}
+.join-aff{margin-top:22px;padding:18px;border-radius:16px;background:#171717;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}.join-aff p{margin:6px 0 10px;color:#d4d4d4;font-size:13px}.join-flow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-weight:700;font-size:13px}.join-flow span{background:#2a2a2a;border:1px solid #444;border-radius:999px;padding:5px 12px}.join-flow i{color:#d4af37;font-style:normal}.join-btn{background:#25d366;color:#08240f;font-weight:800;padding:11px 16px;border-radius:12px;text-decoration:none;text-align:center}
 </style>
 </head>
 <body>
@@ -402,6 +403,7 @@ input::placeholder,textarea::placeholder{color:#8f8466}
   <div class="panel-head"><div><h2>Katalog Produk</h2><div class="muted">Pilih variasi produk lalu lanjutkan pemesanan.</div></div><span id="catalogCount" class="badge">0 produk</span></div>
   <div class="toolbar"><input id="search" placeholder="Cari produk..."><select id="catFilter"><option value="">Semua kategori</option></select><select id="sort"><option value="new">Terbaru</option><option value="low">Harga terendah</option><option value="high">Harga tertinggi</option></select></div>
   <div id="catalogGrid" class="grid"></div><div id="catalogEmpty" class="empty hidden">Belum ada produk. Admin dapat menambahkan produk melalui dashboard admin.</div>
+ <div class="join-aff" id="joinAff"><div><b>Mau cuan tanpa stok barang? Jadi affiliate KABAURIA!</b><p>Syarat: beli minimal 1 pcs. Setiap penjualan lewat link kamu untung <b>Rp10.000/pcs</b>, tanpa modal stok.</p><div class="join-flow"><span>1. Posting</span><i>→</i><span>2. Beli</span><i>→</i><span>3. Cuan</span></div></div><a id="joinAffWa" class="join-btn" href="#" target="_blank" rel="noopener">Daftar jadi affiliate via WhatsApp</a></div>
  </div>
 </section>
 <section id="view-affiliate" class="hidden">
@@ -420,7 +422,7 @@ input::placeholder,textarea::placeholder{color:#8f8466}
  </div>
 </section>
 </main>
-<footer class="footer">KABAURIA Kaos Tambang · Affiliate v1.3 · Prototype untuk review alur kerja · Pengiriman dikelola sistem terpisah</footer>
+<footer class="footer">KABAURIA Kaos Tambang · Dari Tanah Papua<br>Hubungi admin via WhatsApp: <a id="footWa" href="https://wa.me/6282394830290" target="_blank" rel="noopener" style="font-weight:800;color:inherit">0823-9483-0290</a></footer>
 
 <div class="overlay" id="productModal"><div class="modal"><div class="modal-head"><h2 id="productModalTitle">Tambah produk</h2><button class="close" data-close="productModal">Tutup ✕</button></div>
 <form id="productForm"><input type="hidden" id="productId"><div class="form-grid">

@@ -1,5 +1,5 @@
 /* KABAURIA Kaos Tambang - Affiliate Portal (tersambung Supabase) */
-const APP_VERSION='3.3';
+const APP_VERSION='3.4';
 /* Tampilkan setiap error di layar (bukan diam-diam) agar mudah dilacak */
 function showFatal(m){try{let b=document.getElementById('fatalBanner');if(!b){b=document.createElement('div');b.id='fatalBanner';b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#7f1d1d;color:#fff;padding:10px 14px;font:13px/1.4 system-ui,sans-serif;white-space:pre-wrap;cursor:pointer';b.title='Klik untuk menutup';b.onclick=()=>b.remove();document.body.appendChild(b)}b.textContent='Terjadi kesalahan (v'+APP_VERSION+'): '+m}catch(_){}}
 window.addEventListener('error',e=>showFatal((e.message||'error')+(e.filename?' ['+e.filename.split('/').pop()+':'+e.lineno+']':'')));
@@ -21,6 +21,11 @@ const CFG_KEY=String(typeof SUPABASE_ANON_KEY!=='undefined'?SUPABASE_ANON_KEY:(_
 const CFG_EMAIL_BASE=String(_cfg.AFFILIATE_EMAIL_BASE||(typeof AFFILIATE_EMAIL_BASE!=='undefined'?AFFILIATE_EMAIL_BASE:'')||'kabauria.affiliate@gmail.com').trim();
 /* Affiliate login pakai USERNAME. Di Supabase Auth username diubah jadi email tersembunyi: nama+username@domain */
 const userToEmail=u=>{const p=CFG_EMAIL_BASE.split('@');return p[0]+'+'+String(u).trim().toLowerCase()+'@'+p[1]};
+/* WhatsApp admin untuk konfirmasi pembayaran (format internasional tanpa +). Bisa diganti lewat config.js: ADMIN_WA */
+const ADMIN_WA=String(_cfg.ADMIN_WA||'6282394830290').replace(/\D/g,'');
+const ADMIN_WA_LABEL='0823-9483-0290';
+(function(){const e=document.getElementById('joinAffWa');if(e)e.href='https://api.whatsapp.com/send?phone='+ADMIN_WA+'&text='+encodeURIComponent('Halo Admin KABAURIA, saya tertarik jadi affiliate (beli 1 pcs, untung Rp10.000/pcs tanpa stok).');})();
+(function(){const e=document.getElementById('footWa');if(e){e.href='https://wa.me/'+ADMIN_WA;e.textContent=ADMIN_WA_LABEL}})();
 let cfgWhy='';
 if(!CFG_URL&&!CFG_KEY)cfgWhy='File config.js tidak terbaca atau tidak ada di GitHub.';
 else if(/ISI_/.test(CFG_URL)||/ISI_/.test(CFG_KEY))cfgWhy='config.js masih berisi tulisan contoh (ISI_...). Ganti dengan URL dan anon key dari Supabase, lalu upload ulang ke GitHub.';
@@ -180,7 +185,7 @@ function makeOrderImage(o){
  y+=10;hr();
  c.fillStyle='#6b5a2a';c.font='500 16px '+SANS;
  y=wrap('Gratis ongkir untuk pengiriman dalam kota. Untuk luar kota, ongkos kirim berlaku dan dikonfirmasi admin.',PAD,y,W-PAD*2,24)+6;
- y=wrap('Simpan gambar ini dan tunjukkan kepada admin sebagai bukti pesanan. Pesanan diproses setelah pembayaran diverifikasi.',PAD,y,W-PAD*2,24)+16;
+ y=wrap('Konfirmasi pembayaran: kirim gambar ini beserta bukti pembayaran ke WhatsApp admin '+ADMIN_WA_LABEL+'. Pesanan diproses setelah pembayaran diverifikasi.',PAD,y,W-PAD*2,24)+16;
  const out=document.createElement('canvas');out.width=W;out.height=Math.ceil(y+PAD/2);out.getContext('2d').drawImage(big,0,0);
  return out}
 function saveOrderImage(o){const cv=makeOrderImage(o);const url=cv.toDataURL('image/png');const fn='Pesanan-'+o.orderNo+'.png';
@@ -192,8 +197,10 @@ function showPayInfo(o){const P=db.settings.payments;let h=`<div class="commissi
  else h+=`<h3>Bayar tunai</h3><p>${esc(P.cash.note)}</p>`;
  const others=['qris','transfer','cash'].filter(k=>k!==o.paymentMethod&&P[k]?.enabled);
  const sw=(others.length&&o.phone)?`<div class="notice" style="margin-top:14px"><b>Ingin ganti metode pembayaran?</b><div class="actions" style="margin-top:8px">${others.map(k=>`<button type="button" class="secondary" data-chpay="${k}">Ganti ke ${payLabel(k)}</button>`).join('')}</div><div id="chpayStatus" class="status"></div></div>`:'';
+ const waBlock=o.customer?`<div class="notice" style="margin-top:14px"><b>Konfirmasi pembayaran lewat WhatsApp admin</b><ol style="margin:8px 0 0;padding-left:20px;line-height:1.55"><li>Tekan <i>Simpan gambar pesanan</i> di atas.</li><li>${o.paymentMethod==='cash'?'Bayar tunai sesuai petunjuk.':'Lakukan pembayaran, lalu simpan bukti pembayarannya.'}</li><li>Tekan tombol di bawah untuk membuka chat admin (${ADMIN_WA_LABEL}), lalu kirim <b>gambar pesanan</b>${o.paymentMethod==='cash'?'':' dan <b>bukti pembayaran</b>'} lewat ikon lampiran.</li></ol><button type="button" id="waConfirm" class="success" style="margin-top:10px;width:100%">Konfirmasi via WhatsApp admin</button></div>`:'';
  const sv=o.customer?'<div style="margin-top:14px"><button type="button" id="saveOrderImg" class="success">Simpan gambar pesanan</button><div id="orderImgPreview"></div></div>':'';
- $('payBody').innerHTML=h+'</div>'+sv+sw+'<p class="muted">Admin akan memverifikasi pembayaran dan memproses pesanan Anda. Simpan nomor pesanan di atas.</p>';if($('saveOrderImg'))$('saveOrderImg').onclick=()=>saveOrderImage(o);
+ $('payBody').innerHTML=h+'</div>'+sv+waBlock+sw+'<p class="muted">Admin akan memverifikasi pembayaran dan memproses pesanan Anda. Simpan nomor pesanan di atas.</p>';if($('saveOrderImg'))$('saveOrderImg').onclick=()=>saveOrderImage(o);
+ if($('waConfirm'))$('waConfirm').onclick=()=>{const url='https://api.whatsapp.com/send?phone='+ADMIN_WA+'&text='+encodeURIComponent('Halo Admin KABAURIA, saya ingin konfirmasi pembayaran.\n\nNo. pesanan: '+o.orderNo+'\nNama: '+(o.customer||'-'));const w=window.open(url,'_blank');if(w){try{w.opener=null}catch(_){}}else location.href=url};
  $('payBody').querySelectorAll('[data-chpay]').forEach(b=>b.onclick=async()=>{const st=$('chpayStatus');st.style.color='var(--muted,#666)';st.textContent='Mengubah...';b.disabled=true;const {data,error}=await sb.rpc('change_payment_method',{p_order_no:o.orderNo,p_phone:o.phone,p_method:b.dataset.chpay});if(error){b.disabled=false;st.style.color='var(--red)';st.textContent=error.message;return}showPayInfo({...o,paymentMethod:data.payment_method,total:Number(data.total)||o.total});refresh()});
  if($('copyRek'))$('copyRek').onclick=()=>copyText(P.transfer.number,'Nomor rekening disalin.');$('payModal').classList.add('show')}
 
