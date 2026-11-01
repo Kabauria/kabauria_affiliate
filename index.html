@@ -387,6 +387,7 @@ input::placeholder,textarea::placeholder{color:#8f8466}
 .ship-ico2{background:#8a6812}
 .join-aff{margin-top:22px;padding:18px 20px;border-radius:16px;background:linear-gradient(135deg,#f3dc8f 0%,#d9b84f 55%,#b8902c 100%);border:1px solid #a98324;color:#3d2a00;box-shadow:0 6px 16px rgba(110,80,10,.22);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}.join-aff b{color:#2e1f00}.join-aff p{margin:6px 0 10px;color:#4a3500;font-size:13px}.join-flow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-weight:700;font-size:13px}.join-flow span{background:#fffaf0;color:#6e500a;border:1px solid #a98324;border-radius:999px;padding:5px 12px}.join-flow i{color:#6e500a;font-style:normal;font-weight:800}.join-btn{background:#1f9d55;color:#fff;font-weight:800;padding:11px 16px;border-radius:12px;text-decoration:none;text-align:center;box-shadow:0 4px 10px rgba(0,0,0,.18)}
 .locbar{background:linear-gradient(135deg,#a98324,#8a6812 55%,#6e500a);color:#fff;text-align:center;font-size:12px;font-weight:700;letter-spacing:.4px;padding:6px 12px}
+.ast-sec{margin:14px 0 6px;font-weight:800}.ast-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}.ast-item{border:1px solid #d3bd7c;border-radius:12px;overflow:hidden;background:#fffaf0}.ast-item img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:#f3ead0}.ast-item .ast-act{display:flex;gap:4px;padding:6px}.ast-item .ast-act button,.ast-item .ast-act a{flex:1;font-size:11px;padding:6px 4px;border-radius:8px;text-align:center}.ast-item .ast-act a{background:linear-gradient(135deg,#a98324,#6e500a);color:#fff;text-decoration:none;font-weight:700}.ast-noimg{display:flex;align-items:center;justify-content:center;aspect-ratio:1/1;padding:8px;font-size:11px;text-align:center;color:#6e500a;word-break:break-all}.ast-count{display:inline-block;margin-top:6px;font-size:11px;color:#6e500a}
 </style>
 </head>
 <body>
@@ -426,6 +427,7 @@ input::placeholder,textarea::placeholder{color:#8f8466}
 </main>
 <footer class="footer">KABAURIA Kaos Tambang · Dari Tanah Papua<br>Lokasi: Timika<br>Hubungi admin via WhatsApp / No. HP: <a id="footWa" href="https://wa.me/6282394830290" target="_blank" rel="noopener" style="font-weight:800;color:inherit">0823-9483-0290</a></footer>
 
+<div class="overlay" id="assetModal"><div class="modal"><div class="modal-head"><h2 id="assetTitle">Stok gambar</h2><button class="close" data-close="assetModal">Tutup ✕</button></div><div class="notice" style="margin-bottom:12px"><b>Stok gambar untuk affiliate.</b> Simpan gambar di bawah, lalu unggah di media sosial Anda (Instagram, TikTok, Facebook, status WhatsApp) bersama link referral Anda. Tombol <b>Unduh</b> menyimpan gambar dengan resolusi asli, tanpa dikecilkan.</div><div id="assetBody"></div></div></div>
 <div class="overlay" id="productModal"><div class="modal"><div class="modal-head"><h2 id="productModalTitle">Tambah produk</h2><button class="close" data-close="productModal">Tutup ✕</button></div>
 <form id="productForm"><input type="hidden" id="productId"><div class="form-grid">
  <div class="field"><label>Nama produk *</label><input id="pName" required placeholder="KABAURIA Underground Tee"></div>
@@ -435,6 +437,8 @@ input::placeholder,textarea::placeholder{color:#8f8466}
  <div class="field full"><label>Deskripsi</label><textarea id="pDesc" placeholder="Bahan, sablon, detail produk"></textarea></div>
  <div class="field full"><label>Foto produk (minimal 1, maksimal 5; boleh pilih beberapa sekaligus)</label><input id="pImage" type="file" accept="image/*" multiple><div id="pImageList" class="pimglist"></div><div id="pImageStatus" class="muted"></div></div>
  <div class="field full"><label>Atau tambah lewat URL gambar (opsional, dihitung dalam batas 5)</label><input id="pImageUrl" type="url" placeholder="https://..."></div>
+ <div class="field full"><label>Stok gambar affiliate: Foto asli (satu link gambar per baris)</label><textarea id="pAssetsOriginal" rows="3" placeholder="https://ik.imagekit.io/..."></textarea></div>
+ <div class="field full"><label>Stok gambar affiliate: Mock up (satu link gambar per baris)</label><textarea id="pAssetsMockup" rows="3" placeholder="https://ik.imagekit.io/..."></textarea><div class="muted" style="margin-top:4px">Unggah gambar di ImageKit (imagekit.io/dashboard), salin link tiap gambar, lalu tempel di sini. Stok gambar ini dilihat affiliate untuk diunggah di media sosial. Berlaku untuk seluruh produk, bukan per varian.</div></div>
  <div class="field"><label>Aturan komisi produk</label><select id="pCommissionMode"><option value="default">Ikuti default</option><option value="fixed">Nominal tetap (Rp)</option><option value="percent">Persentase (%)</option></select></div>
  <div class="field"><label>Nilai komisi produk</label><input id="pCommissionValue" type="number" min="0" value="0"></div>
  </div>
